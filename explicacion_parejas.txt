@@ -1,0 +1,164 @@
+EXPLICACIÓN DETALLADA DEL CÓDIGO DEL JUEGO DE LAS PAREJAS
+============================================================
+
+A continuación tienes el código del juego de parejas, explicado paso a paso. Cada bloque de código va seguido de su explicación detallada.
+
+---
+
+1. IMPORTACIÓN DE MÓDULOS
+
+import random
+import time
+from tkinter import Tk, Button, DISABLED, messagebox
+
+Estos módulos permiten:
+- random: mezclar los símbolos aleatoriamente.
+- time: medir el tiempo de juego y hacer pausas.
+- tkinter: crear la interfaz gráfica, botones y ventanas emergentes.
+
+---
+
+2. SELECCIÓN DEL NIVEL DE DIFICULTAD
+
+nivel_seleccionado = None
+
+def elegir_nivel(nivel):
+    global nivel_seleccionado
+    nivel_seleccionado = nivel
+    selector.destroy()
+
+selector = Tk()
+selector.title("Selecciona nivel")
+Button(selector, text="Fácil", command=lambda: elegir_nivel("facil")).pack(pady=10)
+Button(selector, text="Difícil", command=lambda: elegir_nivel("dificil")).pack(pady=10)
+selector.mainloop()
+
+Aquí se crea una ventana donde el usuario elige si quiere jugar en modo fácil o difícil. Según la elección, se guarda el nivel y se cierra esta ventana inicial.
+
+---
+
+3. CONFIGURACIÓN SEGÚN EL NIVEL
+
+if nivel_seleccionado == "facil":
+    rows = 3
+    columns = 4
+    num_pairs = 6
+else:
+    rows = 4
+    columns = 6
+    num_pairs = 12
+
+Dependiendo del nivel, se define el número de filas, columnas y parejas que tendrá el tablero.
+
+---
+
+4. INICIALIZACIÓN DE LA VENTANA PRINCIPAL
+
+def close_window():
+    root.destroy()
+
+root = Tk()
+root.title("Juego de las Parejas")
+root.resizable(width=False, height=False)
+
+Se crea la ventana principal del juego y una función para cerrarla al finalizar.
+
+---
+
+5. VARIABLES PRINCIPALES DEL JUEGO
+
+buttons = {}
+button_symbols = {}
+first = True
+previousX = None
+previousY = None
+moves = 0
+pairs_found = 0
+start_time = time.time()
+
+- buttons y button_symbols: diccionarios para guardar los botones y sus símbolos.
+- first, previousX, previousY: controlan si es la primera carta y recuerdan la posición previa.
+- moves: cuenta los movimientos.
+- pairs_found: cuenta las parejas encontradas.
+- start_time: guarda el tiempo de inicio para medir la duración de la partida.
+
+---
+
+6. CREACIÓN Y MEZCLA DE SÍMBOLOS
+
+symbols = [ u'\u2600', u'\u2600', u'\u2601', u'\u2601', u'\u2602', u'\u2602',
+           u'\u2603', u'\u2603', u'\u25EF', u'\u25EF', u'\u2605', u'\u2605',
+           u'\u2606', u'\u2606', u'\u260E', u'\u260E', u'\u260F', u'\u260F',
+           u'\u25C6', u'\u25C6', u'\u25C7', u'\u25C7', u'\u263B', u'\u263B']
+
+symbols = symbols[:num_pairs*2]
+random.shuffle(symbols)
+
+Se crea una lista de símbolos Unicode (cada uno repetido dos veces para formar parejas). Se recorta según el nivel y se mezcla aleatoriamente para que el tablero sea diferente cada vez.
+
+---
+
+7. FUNCIÓN PRINCIPAL DEL JUEGO: MOSTRAR Y COMPARAR SÍMBOLOS
+
+def show_symbol(x, y):
+    global first, pairs_found
+    global previousX, previousY, moves
+    buttons[x, y]["text"] = button_symbols[x, y]
+    buttons[x, y].update_idletasks()
+
+    if first:
+        previousX = x
+        previousY = y
+        first = False
+        moves += 1
+    elif previousX != x or previousY != y:
+        if buttons[previousX, previousY]["text"] != buttons[x, y]["text"]:
+            time.sleep(0.5)
+            buttons[previousX, previousY]["text"] = ""
+            buttons[x, y]["text"] = ""
+        else:
+            buttons[previousX, previousY]['state'] = DISABLED
+            buttons[x, y]['state'] = DISABLED
+            pairs_found += 1
+            if pairs_found == num_pairs:
+                tiempo_total = int(time.time() - start_time)
+                minutos = tiempo_total // 60
+                segundos = tiempo_total % 60
+                messagebox.showinfo(
+                    "Fin del juego",
+                    f"Número de movimientos utilizados: {moves}\nTiempo total: {minutos} min {segundos} seg",
+                    parent=root)
+                close_window()
+        first = True
+
+Esta función se ejecuta cada vez que el usuario pulsa un botón:
+- Si es la primera carta, la guarda como referencia.
+- Si es la segunda, compara los símbolos:
+  - Si no coinciden, los oculta tras medio segundo.
+  - Si coinciden, desactiva ambos botones y suma una pareja encontrada.
+  - Si se encuentran todas las parejas, muestra un mensaje con los movimientos y el tiempo, y cierra el juego.
+
+---
+
+8. CREACIÓN DE LA CUADRÍCULA DE BOTONES
+
+for x in range(rows):
+    for y in range(columns):
+        button = Button(command = lambda x=x, y=y: show_symbol(x, y), width=3, height=2)
+        button.grid(column=y, row=x)
+        buttons[x, y] = button
+        button_symbols[x, y] = symbols.pop()
+
+Se crea una cuadrícula de botones en la ventana. Cada botón llama a show_symbol con su posición y se le asigna un símbolo de la lista mezclada.
+
+---
+
+9. INICIO DEL BUCLE PRINCIPAL DE LA INTERFAZ
+
+root.mainloop()
+
+Esto mantiene la ventana abierta y permite que el usuario interactúe con el juego.
+
+---
+
+Si necesitas que explique aún más alguna parte, ¡dímelo!
